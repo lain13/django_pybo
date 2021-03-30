@@ -4,7 +4,7 @@
 
 원본소스는 아래의 깃헙 주소를 참고해 주세요.
 
-> 브랜치: https://github.com/pahkey/djangobook
+> 리포지터리: https://github.com/pahkey/djangobook
 
 관리자 인증정보
 > admin/admin
