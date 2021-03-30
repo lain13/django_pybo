@@ -9,7 +9,7 @@
 관리자 인증정보
 > admin/admin
 
-
+해야할일
 - 공통 템플릿을 common으로 이동하기
 - 뷰를 class based view로 변경하기
 - 공통 컬럼 수정하기 createdon modifiedon createdby modifiedby
