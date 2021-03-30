@@ -14,3 +14,4 @@
 - 뷰를 class based view로 변경하기
 - 공통 컬럼 수정하기 createdon modifiedon createdby modifiedby
 - 파일 업로드 가능하게 하기
+- 로그인 기능을 장고의 표준 auth에 호환시키기
