@@ -18,8 +18,13 @@ from django.urls import path, include
 from pybo.views import IndexView
 
 urlpatterns = [
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/register/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
     path('pybo/', include('pybo.urls')),
     path('common/', include('common.urls')),
     path('', IndexView.as_view(), name='index'),  # '/' 에 해당되는 path
+    #http://localhost:8000/accounts/login/?next=/pybo/question/create/
+    #path('accounts/', include('common.urls')),    # 로그인 URL
+
 ]
