@@ -47,18 +47,18 @@ class QuestionCreateView(LoginRequiredMixin, CreateView):
     # template_name기본값 'pybo/question_form.html'
     template_name: str = 'pybo/question_form.html'
 
-    def form_valid(self, form: AnswerForm)->HttpResponseRedirect:
+    def form_valid(self, form: AnswerForm) -> HttpResponseRedirect:
         """
         form.instance에 작성하려고하는 객체가 들어 있다.
         여기에 추가로 필요한 항목을 채워 넣는다.
         질문폼 클래스가 모델폼이기 때문에 객체의 저장은 부모 클래스에서 처리해준다.
         """
         form.instance.owner = self.request.user
-        form.instance.createdby = self.request.user
-        form.instance.modifiedby = self.request.user
+        form.instance.created_by = self.request.user
+        form.instance.modified_by = self.request.user
         return super().form_valid(form)
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         보존에 성공했을때 리다이렉트되는 url
         """
@@ -76,7 +76,7 @@ class QuestionModifyView(LoginRequiredMixin, UpdateView):
     # template_name기본값 'pybo/question_form.html'
     template_name: str = "pybo/question_form.html"
 
-    def get_object(self, *args, **kwargs)->Answer:
+    def get_object(self, *args, **kwargs) -> Answer:
         """
         get_object 메서드에서 객체에 대한 권한을 체크한다.
         """
@@ -85,29 +85,30 @@ class QuestionModifyView(LoginRequiredMixin, UpdateView):
             raise PermissionDenied('댓글수정권한이 없습니다.')
         return obj
 
-    def form_valid(self, form: QuestionForm)->HttpResponseRedirect:
+    def form_valid(self, form: QuestionForm) -> HttpResponseRedirect:
         """
         form.instance에 작성하려고하는 객체가 들어 있다.
         여기에 추가로 필요한 항목을 채워 넣는다.
         객체의 저장은 부모 클래스에서 처리한다.
         """
         form.instance.owner = self.request.user
-        form.instance.modifiedby = self.request.user
+        form.instance.modified_by = self.request.user
         return super().form_valid(form)
 
-    def get_queryset(self)->QuerySet:
+    def get_queryset(self) -> QuerySet:
         """
         관련 데이터를 한번에 불러들이기위해서 get_queryset메서드를 오버라이드 한다.
         """
         return super().get_queryset().select_related('owning_user', 'owning_group')
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         수정에 성공했을때 리다이렉트되는 url
         """
         question = self.object
         messages.info(self.request, '질문댓글을 수정했습니다.')
-        logger.info('redirect URL:{0}', resolve_url('pybo:detail', pk=question.id))
+        logger.info('redirect URL:{0}', resolve_url(
+            'pybo:detail', pk=question.id))
         return resolve_url('pybo:detail', pk=question.id)
 
 
@@ -120,7 +121,7 @@ class QuestionDeleteView(LoginRequiredMixin, DeleteView):
     model: type = Question
     # template_name기본값 'pybo/question_confirm_delete.html'
 
-    def get_object(self, *args, **kwargs)->Question:
+    def get_object(self, *args, **kwargs) -> Question:
         """
         get_object 메서드에서 객체에 대한 권한을 체크한다.
         """
@@ -129,13 +130,14 @@ class QuestionDeleteView(LoginRequiredMixin, DeleteView):
             raise PermissionDenied('질문 삭제권한이 없습니다.')
         return obj
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         삭제에 성공했을때 리다이렉트되는 url
         """
         messages.info(self.request, '질문을 삭제했습니다.')
         logger.info('redirect URL:{0}', resolve_url('pybo:index'))
         return resolve_url('pybo:index')
+
 
 class AnswerCreateView(LoginRequiredMixin, CreateView):
     """
@@ -144,7 +146,7 @@ class AnswerCreateView(LoginRequiredMixin, CreateView):
     form_class: type = AnswerForm
     template_name: str = 'pybo/question_detail.html'
 
-    def form_valid(self, form: AnswerForm)->HttpResponseRedirect:
+    def form_valid(self, form: AnswerForm) -> HttpResponseRedirect:
         """
         폼 검증이 처리된경우
         form.instance에 작성하려고하는 객체가 들어 있다.
@@ -154,12 +156,12 @@ class AnswerCreateView(LoginRequiredMixin, CreateView):
         """
         logger.info('AnswerCreateView form_valid')
         form.instance.owner = self.request.user  # 추가한 속성 owner 적용
-        form.instance.createdby = self.request.user
-        form.instance.modifiedby = self.request.user
+        form.instance.created_by = self.request.user
+        form.instance.modified_by = self.request.user
         form.instance.question = Question(pk=self.kwargs['question_id'])
         return super().form_valid(form)
 
-    def form_invalid(self, form: AnswerForm)->HttpResponse:
+    def form_invalid(self, form: AnswerForm) -> HttpResponse:
         """
         폼 검증이 처리되지 않은경우
         그후에 template_name으로 렌더링된다.
@@ -169,10 +171,11 @@ class AnswerCreateView(LoginRequiredMixin, CreateView):
         logger.info('AnswerCreateView form_invalid')
         context = self.get_context_data()
         context['form'] = form
-        context['question'] = get_object_or_404(Question, pk=self.kwargs['question_id'])
+        context['question'] = get_object_or_404(
+            Question, pk=self.kwargs['question_id'])
         return self.render_to_response(context)
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         보존에 성공했을때 리다이렉트되는 url
         """
@@ -181,9 +184,10 @@ class AnswerCreateView(LoginRequiredMixin, CreateView):
         answer = self.object
         messages.info(self.request, '답변을 등록했습니다.')
         logger.info('redirect URL:{0}#answer_{1}',
-            resolve_url('pybo:detail', pk=answer.question.id), answer.id)
+                    resolve_url('pybo:detail', pk=answer.question.id), answer.id)
         return '{0}#answer_{1}'.format(
             resolve_url('pybo:detail', pk=answer.question.id), answer.id)
+
 
 class AnswerModifyView(LoginRequiredMixin, UpdateView):
     """
@@ -193,7 +197,7 @@ class AnswerModifyView(LoginRequiredMixin, UpdateView):
     form_class: type = AnswerForm
     template_name: str = "pybo/answer_form.html"
 
-    def get_object(self, *args, **kwargs)->Answer:
+    def get_object(self, *args, **kwargs) -> Answer:
         """
         get_object 메서드에서 객체에 대한 권한을 체크한다.
         """
@@ -203,7 +207,7 @@ class AnswerModifyView(LoginRequiredMixin, UpdateView):
             raise PermissionDenied('수정권한이 없습니다.')
         return obj
 
-    def form_valid(self, form: AnswerForm)->HttpResponseRedirect:
+    def form_valid(self, form: AnswerForm) -> HttpResponseRedirect:
         """
         form.instance에 작성하려고하는 객체가 들어 있다.
         여기에 추가로 필요한 항목을 채워 넣는다.
@@ -211,17 +215,17 @@ class AnswerModifyView(LoginRequiredMixin, UpdateView):
         """
         logger.info('AnswerModifyView form_valid')
         form.instance.owner = self.request.user
-        form.instance.modifiedby = self.request.user
+        form.instance.modified_by = self.request.user
         return super().form_valid(form)
 
-    def get_queryset(self)->QuerySet:
+    def get_queryset(self) -> QuerySet:
         """
         관련 데이터를 한번에 불러들이기위해서 get_queryset메서드를 오버라이드 한다.
         """
         logger.info('AnswerModifyView get_queryset')
         return super().get_queryset().select_related('question')
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         수정에 성공했을때 리다이렉트되는 url
         """
@@ -229,9 +233,10 @@ class AnswerModifyView(LoginRequiredMixin, UpdateView):
         answer = self.object
         messages.info(self.request, '답변을 수정했습니다.')
         logger.info('redirect URL:{}#answer_{}',
-            resolve_url('pybo:detail', pk=answer.question.id), answer.id)
+                    resolve_url('pybo:detail', pk=answer.question.id), answer.id)
         return '{}#answer_{}'.format(
             resolve_url('pybo:detail', pk=answer.question.id), answer.id)
+
 
 class AnswerDeleteView(LoginRequiredMixin, DeleteView):
     """
@@ -240,7 +245,7 @@ class AnswerDeleteView(LoginRequiredMixin, DeleteView):
     model: type = Answer
     # default template_name 'pybo/answer_confirm_delete.html'
 
-    def get_object(self, *args, **kwargs)->Answer:
+    def get_object(self, *args, **kwargs) -> Answer:
         """
         get_object 메서드에서 객체에 대한 권한을 체크한다.
         """
@@ -250,7 +255,7 @@ class AnswerDeleteView(LoginRequiredMixin, DeleteView):
             raise PermissionDenied('삭제권한이 없습니다.')
         return obj
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         삭제에 성공했을때 리다이렉트되는 url
         """
@@ -260,6 +265,7 @@ class AnswerDeleteView(LoginRequiredMixin, DeleteView):
         logger.info(resolve_url('pybo:detail', pk=answer.question.id))
         return resolve_url('pybo:detail', pk=answer.question.id)
 
+
 class IndexView(TemplateView):
     """
     pybo 목록 출력
@@ -267,7 +273,7 @@ class IndexView(TemplateView):
 
     template_name: str = 'pybo/question_list.html'
 
-    def get(self, request: HttpRequest, *args, **kwargs)->HttpResponse:
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         """
         pybo 목록 출력
         """
@@ -279,27 +285,31 @@ class IndexView(TemplateView):
 
         # 정렬
         if so == 'recommend':
-            question_list = Question.objects.annotate(num_voter=Count('voter')).order_by('-num_voter', '-createdon')
+            question_list = Question.objects.annotate(
+                num_voter=Count('voter')).order_by('-num_voter', '-created_on')
         elif so == 'popular':
-            question_list = Question.objects.annotate(num_answer=Count('answer')).order_by('-num_answer', '-createdon')
+            question_list = Question.objects.annotate(
+                num_answer=Count('answer')).order_by('-num_answer', '-created_on')
         else:  # recent
-            question_list = Question.objects.order_by('-createdon')
+            question_list = Question.objects.order_by('-created_on')
 
         # 검색
         if kw:
             question_list = question_list.filter(
                 Q(subject__icontains=kw) |  # 제목검색
                 Q(content__icontains=kw) |  # 내용검색
-                Q(createdby__username__icontains=kw) |  # 질문 글쓴이검색
-                Q(answer__createdby__username__icontains=kw)  # 답변 글쓴이검색
+                Q(created_by__username__icontains=kw) |  # 질문 글쓴이검색
+                Q(answer__created_by__username__icontains=kw)  # 답변 글쓴이검색
             ).distinct()
 
         # 페이징처리
         paginator = Paginator(question_list, 10)  # 페이지당 10개씩 보여주기
         page_obj = paginator.get_page(page)
 
-        context = {'question_list': page_obj, 'page': page, 'kw': kw, 'so': so}  # <------ so 추가
+        context = {'question_list': page_obj, 'page': page,
+                   'kw': kw, 'so': so}  # <------ so 추가
         return self.render_to_response(context)
+
 
 class QuestionDetailView(DetailView):
     """
@@ -308,12 +318,12 @@ class QuestionDetailView(DetailView):
     model: type = Question
     template_name: str = 'pybo/question_detail.html'
 
-    def get_queryset(self)->QuerySet:
+    def get_queryset(self) -> QuerySet:
         """
         관련 데이터를 한번에 불러들이기위해서 get_queryset메서드를 오버라이드 한다.
         """
         logger.info('QuestionDetailView get_queryset')
-        return super().get_queryset().select_related('createdby', 'modifiedby')
+        return super().get_queryset().select_related('created_by', 'modified_by')
 
 
 class CommentCreateQuestionView(LoginRequiredMixin, CreateView):
@@ -324,7 +334,7 @@ class CommentCreateQuestionView(LoginRequiredMixin, CreateView):
     # template_name기본값 'pybo/question_form.html'
     template_name: str = 'pybo/comment_form.html'
 
-    def form_valid(self, form: CommentForm)->HttpResponseRedirect:
+    def form_valid(self, form: CommentForm) -> HttpResponseRedirect:
         """
         form.instance에 작성하려고하는 객체가 들어 있다.
         여기에 추가로 필요한 항목을 채워 넣는다.
@@ -332,12 +342,12 @@ class CommentCreateQuestionView(LoginRequiredMixin, CreateView):
         """
         logger.info('CommentCreateQuestionView form_valid')
         form.instance.owner = self.request.user
-        form.instance.createdby = self.request.user
-        form.instance.modifiedby = self.request.user
+        form.instance.created_by = self.request.user
+        form.instance.modified_by = self.request.user
         form.instance.question = Question(pk=self.kwargs['question_id'])
         return super().form_valid(form)
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         보존에 성공했을때 리다이렉트되는 url
         """
@@ -358,7 +368,7 @@ class CommentModifyQuestionView(LoginRequiredMixin, UpdateView):
     form_class: type = CommentForm
     template_name: str = "pybo/comment_form.html"
 
-    def get_object(self, *args, **kwargs)->Answer:
+    def get_object(self, *args, **kwargs) -> Answer:
         """
         get_object 메서드에서 객체에 대한 권한을 체크한다.
         """
@@ -368,7 +378,7 @@ class CommentModifyQuestionView(LoginRequiredMixin, UpdateView):
             raise PermissionDenied('수정권한이 없습니다.')
         return obj
 
-    def form_valid(self, form: AnswerForm)->HttpResponseRedirect:
+    def form_valid(self, form: AnswerForm) -> HttpResponseRedirect:
         """
         form.instance에 작성하려고하는 객체가 들어 있다.
         여기에 추가로 필요한 항목을 채워 넣는다.
@@ -376,17 +386,17 @@ class CommentModifyQuestionView(LoginRequiredMixin, UpdateView):
         """
         logger.info('CommentModifyQuestionView form_valid')
         form.instance.owner = self.request.user
-        form.instance.modifiedby = self.request.user
+        form.instance.modified_by = self.request.user
         return super().form_valid(form)
 
-    def get_queryset(self)->QuerySet:
+    def get_queryset(self) -> QuerySet:
         """
         관련 데이터를 한번에 불러들이기위해서 get_queryset메서드를 오버라이드 한다.
         """
         logger.info('CommentModifyQuestionView get_queryset')
-        return super().get_queryset().select_related('question', 'createdby', 'modifiedby')
+        return super().get_queryset().select_related('question', 'created_by', 'modified_by')
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         수정에 성공했을때 리다이렉트되는 url
         """
@@ -394,7 +404,7 @@ class CommentModifyQuestionView(LoginRequiredMixin, UpdateView):
         comment = self.object
         messages.info(self.request, '질문댓글을 수정했습니다.')
         logger.info('redirect URL:{}#comment_{}',
-            resolve_url('pybo:detail', pk=comment.question.id), comment.id)
+                    resolve_url('pybo:detail', pk=comment.question.id), comment.id)
         return '{}#comment_{}'.format(
             resolve_url('pybo:detail', pk=comment.question.id), comment.id)
 
@@ -406,7 +416,7 @@ class CommentDeleteQuestionView(LoginRequiredMixin, DeleteView):
     model: type = Comment
     # template_name기본값 'pybo/comment_confirm_delete.html'
 
-    def get_object(self, *args, **kwargs)->Answer:
+    def get_object(self, *args, **kwargs) -> Answer:
         """
         get_object 메서드에서 객체에 대한 권한을 체크한다.
         """
@@ -416,7 +426,7 @@ class CommentDeleteQuestionView(LoginRequiredMixin, DeleteView):
             raise PermissionDenied('댓글 삭제권한이 없습니다.')
         return obj
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         삭제에 성공했을때 리다이렉트되는 url
         """
@@ -435,7 +445,7 @@ class CommentCreateAnswerView(LoginRequiredMixin, CreateView):
     # template_name기본값 'pybo/comment_form.html'
     template_name: str = 'pybo/comment_form.html'
 
-    def form_valid(self, form: CommentForm)->HttpResponseRedirect:
+    def form_valid(self, form: CommentForm) -> HttpResponseRedirect:
         """
         form.instance에 작성하려고하는 객체가 들어 있다.
         여기에 추가로 필요한 항목을 채워 넣는다.
@@ -443,12 +453,13 @@ class CommentCreateAnswerView(LoginRequiredMixin, CreateView):
         """
         logger.info('CommentCreateAnswerView form_valid')
         form.instance.owner = self.request.user
-        form.instance.createdby = self.request.user
-        form.instance.modifiedby = self.request.user
-        form.instance.answer = get_object_or_404(Answer, pk=self.kwargs['answer_id'])
+        form.instance.created_by = self.request.user
+        form.instance.modified_by = self.request.user
+        form.instance.answer = get_object_or_404(
+            Answer, pk=self.kwargs['answer_id'])
         return super().form_valid(form)
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         보존에 성공했을때 리다이렉트되는 url
         """
@@ -470,7 +481,7 @@ class CommentModifyAnswerView(LoginRequiredMixin, UpdateView):
     form_class = CommentForm
     template_name: str = "pybo/comment_form.html"
 
-    def get_object(self, *args, **kwargs)->Answer:
+    def get_object(self, *args, **kwargs) -> Answer:
         """
         get_object 메서드에서 객체에 대한 권한을 체크한다.
         """
@@ -480,7 +491,7 @@ class CommentModifyAnswerView(LoginRequiredMixin, UpdateView):
             raise PermissionDenied('댓글수정권한이 없습니다.')
         return obj
 
-    def form_valid(self, form: AnswerForm)->HttpResponseRedirect:
+    def form_valid(self, form: AnswerForm) -> HttpResponseRedirect:
         """
         form.instance에 작성하려고하는 객체가 들어 있다.
         여기에 추가로 필요한 항목을 채워 넣는다.
@@ -488,18 +499,18 @@ class CommentModifyAnswerView(LoginRequiredMixin, UpdateView):
         """
         logger.info('CommentModifyAnswerView form_valid')
         form.instance.owner = self.request.user
-        form.instance.modifiedon = timezone.now()
-        form.instance.modifiedby = self.request.user
+        form.instance.modified_on = timezone.now()
+        form.instance.modified_by = self.request.user
         return super().form_valid(form)
 
-    def get_queryset(self)->QuerySet:
+    def get_queryset(self) -> QuerySet:
         """
         관련 데이터를 한번에 불러들이기위해서 get_queryset메서드를 오버라이드 한다.
         """
         logger.info('CommentModifyAnswerView get_queryset')
-        return super().get_queryset().select_related('answer', 'createdby', 'modifiedby')
+        return super().get_queryset().select_related('answer', 'created_by', 'modified_by')
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         수정에 성공했을때 리다이렉트되는 url
         """
@@ -507,7 +518,7 @@ class CommentModifyAnswerView(LoginRequiredMixin, UpdateView):
         comment = self.object
         messages.info(self.request, '질문댓글을 수정했습니다.')
         logger.info('redirect URL:{}#comment_{}',
-            resolve_url('pybo:detail', pk=comment.answer.question.id), comment.id)
+                    resolve_url('pybo:detail', pk=comment.answer.question.id), comment.id)
         return '{}#comment_{}'.format(
             resolve_url('pybo:detail', pk=comment.answer.question.id), comment.id)
 
@@ -519,7 +530,7 @@ class CommentDeleteAnswerView(LoginRequiredMixin, DeleteView):
     model: type = Comment
     # default template_name 'pybo/comment_confirm_delete.html'
 
-    def get_object(self, *args, **kwargs)->Comment:
+    def get_object(self, *args, **kwargs) -> Comment:
         """
         get_object 메서드에서 객체에 대한 권한을 체크한다.
         """
@@ -529,7 +540,7 @@ class CommentDeleteAnswerView(LoginRequiredMixin, DeleteView):
             raise PermissionDenied('답글 댓글 삭제권한이 없습니다.')
         return obj
 
-    def get_success_url(self)->str:
+    def get_success_url(self) -> str:
         """
         삭제에 성공했을때 리다이렉트되는 url
         """
@@ -539,12 +550,13 @@ class CommentDeleteAnswerView(LoginRequiredMixin, DeleteView):
         logger.info(resolve_url('pybo:detail', pk=comment.answer.question.id))
         return resolve_url('pybo:detail', pk=comment.answer.question.id)
 
+
 class VoteQuestionView(LoginRequiredMixin, View):
     """
     pybo 질문추천등록
     """
 
-    def get(self, request: HttpRequest, *args, **kwargs)->HttpResponseRedirect:
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponseRedirect:
         """
         pybo 질문추천등록
         """
@@ -555,12 +567,13 @@ class VoteQuestionView(LoginRequiredMixin, View):
             question.voter.add(request.user)
         return redirect('pybo:detail', pk=question.id)
 
+
 class VoteAnswerView(LoginRequiredMixin, View):
     """
     pybo 답글추천등록
     """
 
-    def get(self, request: HttpRequest, *args, **kwargs)->HttpResponseRedirect:
+    def get(self, request: HttpRequest, *args, **kwargs) -> HttpResponseRedirect:
         """
         pybo 답글추천등록
         """
