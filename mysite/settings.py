@@ -121,16 +121,16 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-LOGIN_URL = '/accounts/login/' # 기본값
-LOGOUT_URL  = '/accounts/logout/' # 기본값
+LOGIN_URL = '/accounts/login/'  # 기본값
+LOGOUT_URL = '/accounts/logout/'  # 기본값
 # 로그인/로그아웃 성공후 이동하는 URL
-LOGIN_REDIRECT_URL = '/' # 반드시 정의할 것
+LOGIN_REDIRECT_URL = '/'  # 반드시 정의할 것
 LOGOUT_REDIRECT_URL = '/'
 
 # 로깅설정
 log_path = Path(BASE_DIR / 'logs')
 # 디렉터리가 존재하지 않으면 새로 생성함
-if not log_path:
+if not log_path.exists():
     log_path.mkdir()
 LOGGING = {
     'version': 1,
